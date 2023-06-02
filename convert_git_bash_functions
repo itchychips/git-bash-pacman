@@ -1,0 +1,38 @@
+# From https://superuser.com/a/1102643, retrieved 2023-06-02, license CC-BY-SA.
+function isadmin()
+{
+    net session > /dev/null 2>&1
+}
+
+# Find packages with missing files.
+#
+# Code adapted from https://unix.stackexchange.com/a/659777, retrieved
+# 2023-06-02, license CC-BY-SA.
+function find_broken_packages()
+{
+    pacman -Qk 2>/dev/null | grep -v ' 0 missing files' | cut -d: -f1
+}
+
+# Useful for troubleshooting what you may need to pull from the msys2 tarball.
+# We don't need *everything* installed, but some key things, like pacman, its
+# database, and other supporing files will need to be pulled.
+#
+# $1 - (default msys2-x86_64-latest.tar.xz) - tarball to pull a file list from
+# $2 - (default msys64) - prefix to cut off to get to root paths
+function find_uninstalled_files()
+{
+    local tarball="${1:-msys2-x86_64-latest.tar.xz}"
+    local prefix="${2:-msys64}"
+
+    # Word splitting isn't an issue here as the msys distribution tarball
+    # didn't seem to have any spaces or other characters that would cause
+    # issues.  We could make this more robust by setting IFS to newline, but...
+    # I don't want to bother right now.
+    local all_files=$(tar tf msys2-x86_64-latest.tar.xz | sed "s/^$prefix//")
+
+    for file in $all_files; do
+        if [[ ! -f $file ]]; then
+            echo "$file"
+        fi
+    done
+}
